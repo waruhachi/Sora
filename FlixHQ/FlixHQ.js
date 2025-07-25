@@ -1,59 +1,33 @@
 /** biome-ignore-all lint/correctness/noUnusedVariables: <debug> */
 
 async function searchResults(search) {
-	console.log(`[FlixHQ] (debug): searchResults called with search = ${search}`);
 	const results = [];
 
 	try {
 		const encodedSearch = encodeURIComponent(search);
-		console.log(`[FlixHQ] (debug): Encoded search = ${encodedSearch}`);
 		const searchURL = `https://flixhq.watch/search?keyword=${encodedSearch}`;
-		console.log(`[FlixHQ] (debug): searchURL = ${searchURL}`);
 		const searchResponse = await fetchv2(searchURL);
-		console.log(
-			`[FlixHQ] (debug): searchResponse status = ${searchResponse.status}`,
-		);
 		const responseHTML = await searchResponse.text();
-		console.log(
-			`[FlixHQ] (debug): Received responseHTML length = ${responseHTML.length}`,
-		);
 
 		const listMatch = responseHTML.match(
 			/<div class="film_list-wrap">([\s\S]*)<div class="clearfix"><\/div>\s*<\/div>/,
 		);
-		console.log(`[FlixHQ] (debug): listMatch found = ${!!listMatch}`);
 		if (!listMatch) return JSON.stringify(results);
 
 		const listHtml = listMatch[1];
-		console.log(
-			`[FlixHQ] (debug): listHtml (first 1000 chars) = ${listHtml.slice(0, 1000)}`,
-		);
-		console.log(
-			`[FlixHQ] (debug): Count of <div class="flw-item" in listHtml = ${[...listHtml.matchAll(/<div class="flw-item"/g)].length}`,
-		);
 		const itemRegex =
 			/<div class="flw-item"[\s\S]*?<div class="clearfix"><\/div>\s*<\/div>/g;
-		console.log(`[FlixHQ] (debug): itemRegex = ${itemRegex}`);
 		const items = listHtml.match(itemRegex) || [];
-		console.log(`[FlixHQ] (debug): items found = ${items.length}`);
-
-		items.forEach((itemHtml, idx) => {
-			console.log(`[FlixHQ] (debug): Processing item ${idx}`);
+		items.forEach((itemHtml) => {
 			const imgMatch = itemHtml.match(
 				/<div class="film-poster">[\s\S]*?<img[^>]+src="([^"]+)"/,
 			);
 			const detailMatch = itemHtml.match(
 				/<h3 class="film-name">[\s\S]*?<a[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/,
 			);
-			console.log(
-				`[FlixHQ] (debug): imgMatch = ${!!imgMatch}, detailMatch = ${!!detailMatch}`,
-			);
 			if (imgMatch && detailMatch) {
 				let image = imgMatch[1];
 				if (!image.startsWith("http")) image = `https:${image}`;
-				console.log(
-					`[FlixHQ] (debug): Pushing result: title = ${detailMatch[2].trim()}, href = ${detailMatch[1].trim()}, image = ${image.trim()}`,
-				);
 				results.push({
 					title: detailMatch[2].trim(),
 					href: detailMatch[1].trim(),
@@ -61,14 +35,12 @@ async function searchResults(search) {
 				});
 			}
 		});
-		console.log(`[FlixHQ] (debug): Returning ${results.length} results`);
+
 		return JSON.stringify(results);
 	} catch (error) {
-		console.error(`[FlixHQ] Failed to extract search results: ${error}`);
-
 		return JSON.stringify([
 			{
-				title: "Error",
+				title: `Error: ${error}`,
 				href: "",
 				image: "",
 			},
@@ -105,11 +77,12 @@ async function extractDetails(url) {
 		const content = contentMatch[1];
 
 		const descriptionMatch = content.match(
-			/<div class="description">([\s\S]*?)<\/div>/,
+			/<div\s+class=["']description["'][^>]*>([\s\S]*?)<\/div>/,
 		);
 		const description = descriptionMatch
 			? descriptionMatch[1]
-					.replace(/<br\s*\/?>/gi, "\n")
+					.replace(/<br\s*\/?>(?![^<]*<br)/gi, "\n")
+					.replace(/<[^>]+>/g, "")
 					.replace(/\s+/g, " ")
 					.trim()
 			: "No description available";
