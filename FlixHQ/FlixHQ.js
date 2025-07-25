@@ -19,7 +19,7 @@ async function searchResults(search) {
 		);
 
 		const listMatch = responseHTML.match(
-			/<div class="film_list-wrap">([\s\S]*?)<div class="clearfix"><\/div>\s*<\/div>/,
+			/<div class="film_list-wrap">([\s\S]*)<div class="clearfix"><\/div>\s*<\/div>/,
 		);
 		console.log(`[FlixHQ] (debug): listMatch found = ${!!listMatch}`);
 		if (!listMatch) return JSON.stringify(results);
