@@ -28,8 +28,10 @@ async function searchResults(search) {
 		console.log(
 			`[FlixHQ] (debug): listHtml (first 1000 chars) = ${listHtml.slice(0, 1000)}`,
 		);
-		const itemRegex =
-			/<div class="flw-item"[\s\S]*?(?=<div class="flw-item"|$)/g;
+		console.log(
+			`[FlixHQ] (debug): Count of <div class="flw-item" in listHtml = ${[...listHtml.matchAll(/<div class="flw-item"/g)].length}`,
+		);
+		const itemRegex = /<div class="flw-item"[\s\S]*?<\/div>/g;
 		console.log(`[FlixHQ] (debug): itemRegex = ${itemRegex}`);
 		const items = listHtml.match(itemRegex) || [];
 		console.log(`[FlixHQ] (debug): items found = ${items.length}`);
