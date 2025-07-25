@@ -29,7 +29,7 @@ async function searchResults(search) {
 			`[FlixHQ] (debug): listHtml (first 1000 chars) = ${listHtml.slice(0, 1000)}`,
 		);
 		const itemRegex =
-			/<div class="flw-item"[\s\S]*?<\/div>\s*<div class="clearfix"><\/div>?/g;
+			/<div class="flw-item"[\s\S]*?(?=<div class="flw-item"|$)/g;
 		console.log(`[FlixHQ] (debug): itemRegex = ${itemRegex}`);
 		const items = listHtml.match(itemRegex) || [];
 		console.log(`[FlixHQ] (debug): items found = ${items.length}`);
