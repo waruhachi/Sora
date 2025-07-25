@@ -61,7 +61,7 @@ async function extractDetails(url) {
 		);
 
 		const contentMatch = responseHTML.match(
-			/<div class="m_i-d-content">([\s\S]*?)<div class="clearfix"><\/div>\s*<\/div>/,
+			/<div\s+class=["']m_i-d-content["'][^>]*>([\s\S]*?)<div\s+class=["']clearfix["'][^>]*><\/div>\s*<\/div>/,
 		);
 		console.log(`[FlixHQ] (debug): contentMatch found = ${!!contentMatch}`);
 		if (!contentMatch) {
@@ -75,6 +75,9 @@ async function extractDetails(url) {
 			]);
 		}
 		const content = contentMatch[1];
+		console.log(
+			`[FlixHQ] (debug): content (first 1000 chars) = ${content.slice(0, 1000)}`,
+		);
 
 		const descriptionMatch = content.match(
 			/<div\s+class=["']description["'][^>]*>([\s\S]*?)<\/div>/,
