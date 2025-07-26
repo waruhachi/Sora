@@ -28,7 +28,6 @@ async function searchResults(search) {
 	try {
 		const apiURL = "https://animeua.club/index.php?do=search";
 		const apiBody = `do=search&subaction=search&search_start=0&full_search=0&result_from=1&story=${encodeURIComponent(search)}`;
-
 		const apiResponse = await globalFetch(
 			apiURL,
 			{
@@ -40,6 +39,10 @@ async function searchResults(search) {
 			},
 			false,
 		);
+		if (!apiResponse) {
+			console.error("[AnimeUA] No apiResponse found");
+			return JSON.stringify(results);
+		}
 
 		const posterRegex =
 			/<a class="poster grid-item[^>]*href="([^"]+)"[^>]*>[\s\S]*?<img[^>]*data-src="([^"]+)"[^>]*>[\s\S]*?<h3 class="poster__title[^>]*>([^<]+)<\/h3>/g;
@@ -75,6 +78,10 @@ async function searchResults(search) {
 async function extractDetails(url) {
 	try {
 		const apiResponse = await globalFetch(url, {}, false);
+		if (!apiResponse) {
+			console.error("[AnimeUA] No apiResponse found");
+			return JSON.stringify(results);
+		}
 
 		const airdateMatch = apiResponse.match(
 			/<div class="pmovie__year">([^<]+)<\/div>/,
@@ -115,6 +122,7 @@ async function extractEpisodes(url) {
 	try {
 		const apiResponse = await globalFetch(url, {}, false);
 		if (!apiResponse) {
+			console.error("[AnimeUA] No apiResponse found");
 			return JSON.stringify(results);
 		}
 
@@ -122,6 +130,7 @@ async function extractEpisodes(url) {
 			/<div[^>]*class="[^"]*video-inside[^"]*"[^>]*>[\s\S]*?<iframe[^>]*data-src="([^"]+)"[^>]*>/,
 		);
 		if (!iframeMatch) {
+			console.error("[AnimeUA] No iframeMatch found");
 			return JSON.stringify(results);
 		}
 
@@ -129,54 +138,69 @@ async function extractEpisodes(url) {
 			/<div[^>]*class="[^"]*video-inside[^"]*"[^>]*>/,
 		);
 		if (!videoInsideMatch) {
+			console.error("[AnimeUA] No videoInsideMatch found");
 			return JSON.stringify(results);
 		}
 
 		const videoPlayerUrl = iframeMatch[1];
 		const videoPageResponse = await globalFetch(videoPlayerUrl, {}, false);
 		if (!videoPageResponse) {
+			console.error("[AnimeUA] No videoPageResponse found");
 			return JSON.stringify(results);
 		}
 
 		const playerjsMatch = videoPageResponse.match(
-			/new Playerjs\(\{[\s\S]*?file:\s*'(\[[\s\S]*?\])'[\s\S]*?\}\)/,
+			/(?:var\s+\w+\s*=\s*)?new\s+Playerjs\s*\(\s*\{[\s\S]*?file\s*:\s*["'](\[[\s\S]*?\]|https?:\/\/[^"']+)["'][\s\S]*?\}\s*\)/s,
 		);
 		if (!playerjsMatch) {
+			console.error("[AnimeUA] No playerjsMatch found");
 			return JSON.stringify(results);
 		}
 
-		try {
-			const playerjsConfig = JSON.parse(playerjsMatch[1]);
+		const fileContent = playerjsMatch[1];
 
-			if (playerjsConfig.length > 0) {
-				const firstSeason = playerjsConfig[0];
-				if (firstSeason.folder) {
-					for (const seasonFolder of firstSeason.folder) {
-						if (seasonFolder.folder) {
-							for (const episode of seasonFolder.folder) {
-								if (episode.title && episode.file) {
-									const cleanTitle = Number.parseInt(
-										episode.title
-											.replace(/^Серія\s*/i, "")
-											.trim(),
-										10,
-									);
+		if (fileContent.startsWith("http")) {
+			const cleanUrl = fileContent.replace(/^["']|["']$/g, "");
+			results.push({
+				href: cleanUrl,
+				number: 1,
+			});
+		} else {
+			try {
+				const playerjsConfig = JSON.parse(fileContent);
 
-									results.push({
-										href: episode.file,
-										number: cleanTitle,
-									});
+				if (playerjsConfig.length > 0) {
+					const firstSeason = playerjsConfig[0];
+					if (firstSeason.folder) {
+						for (const seasonFolder of firstSeason.folder) {
+							if (seasonFolder.folder) {
+								for (const episode of seasonFolder.folder) {
+									if (episode.title && episode.file) {
+										const cleanTitle = Number.parseInt(
+											episode.title
+												.replace(/^Серія\s*/i, "")
+												.trim(),
+											10,
+										);
+
+										results.push({
+											href: episode.file,
+											number: cleanTitle,
+										});
+									}
 								}
 							}
 						}
 					}
 				}
+			} catch (parseError) {
+				console.error(
+					`[AnimeUA] Failed to parse Playerjs configuration: ${parseError}`,
+				);
 			}
-		} catch (parseError) {
-			console.error(
-				`[AnimeUA] Failed to parse Playerjs configuration: ${parseError}`,
-			);
 		}
+
+		console.log(`[AnimeUA] Results: ${JSON.stringify(results)}`);
 
 		return JSON.stringify(results);
 	} catch (error) {
