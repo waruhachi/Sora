@@ -1,0 +1,19 @@
+{
+	"sourceName": "AnimeUA",
+	"iconUrl": "https://animeua.club/templates/popcornie-light/images/logo.png",
+	"author": {
+		"name": "waru",
+		"icon": "https://avatars.githubusercontent.com/u/156133757",
+		"url": "https://github.com/waruhachi"
+	},
+	"version": "1.0.0",
+	"language": "Ukrainian",
+	"streamType": "HLS",
+	"quality": "720p",
+	"baseUrl": "https://animeua.club/",
+	"searchBaseUrl": "https://animeua.club/index.php?do=search",
+	"scriptUrl": "https://raw.githubusercontent.com/waruhachi/Sora/refs/heads/main/AnimeUA/AnimeUA.js",
+	"type": "Anime",
+	"asyncJS": true,
+	"softsub": false
+}
