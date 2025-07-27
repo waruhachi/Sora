@@ -6,7 +6,7 @@
 		"icon": "https://avatars.githubusercontent.com/u/156133757",
 		"url": "https://github.com/waruhachi"
 	},
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"language": "Ukrainian",
 	"streamType": "HLS",
 	"quality": "720p",
@@ -14,6 +14,7 @@
 	"searchBaseUrl": "https://animeua.club/index.php?do=search",
 	"scriptUrl": "https://raw.githubusercontent.com/waruhachi/Sora/refs/heads/main/AnimeUA/AnimeUA.js",
 	"type": "Anime",
+	"note": "This source is geolocked in certain locations and may not work in your region. If you encounter issues accessing content, please try using a VPN.",
 	"asyncJS": true,
 	"softsub": false
 }
