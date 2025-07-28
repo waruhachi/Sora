@@ -200,8 +200,6 @@ async function extractEpisodes(url) {
 			}
 		}
 
-		console.log(`[AnimeUA] Results: ${JSON.stringify(results)}`);
-
 		return JSON.stringify(results);
 	} catch (error) {
 		console.error(`[AnimeUA] Error extracting episodes: ${error}`);
